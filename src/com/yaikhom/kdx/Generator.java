@@ -48,7 +48,23 @@ import org.apache.commons.cli.PosixParser;
  */
 public class Generator {
 	private static final Logger logger = Logger.getLogger("com.yaikhom.kdx");
-	private HelpFormatter formatter;
+
+	private void showHelp() {
+		StringBuffer footer = new StringBuffer();
+		footer.append("\nCopyright (c) 2010 ");
+		footer.append("Gagarine Yaikhom\n");
+		footer.append("\nThe program kdxgen (The KDX Collection Generator) "
+				+ "is a command line tool for generating Kindle book "
+				+ "collections from a directory tree containing e-books. "
+				+ "The collection names reflect multi-level organisation, "
+				+ "as they are generated according to the directory tree. "
+				+ "This program has only been tested using GNU/Linux. "
+				+ "Please read README for further help. For project details "
+				+ "visit http://kdxgen.sourceforge.net.\n");
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp(80, "java -jar kdxgen.jar", null, options,
+				footer.toString(), true);
+	}
 
 	/**
 	 * Initialise the collection generator.
@@ -62,7 +78,6 @@ public class Generator {
 		logFileHandler.setFormatter(logFileFormatter);
 		logger.addHandler(logFileHandler);
 		logger.setLevel(Level.ALL);
-		formatter = new HelpFormatter();
 	}
 
 	private static final String REQ_DOC_ROOT = "d";
@@ -112,13 +127,13 @@ public class Generator {
 			System.exit(1);
 		}
 		if (!cmd.hasOption(REQ_DOC_ROOT)) {
-			formatter.printHelp("java -jar kdxgen.jar", options);
+			showHelp();
 			System.exit(1);
 		} else {
 			docRoot = cmd.getOptionValue(REQ_DOC_ROOT);
 			if (docRoot.length() < 1) {
 				logger.severe("Invalid document root...Exiting");
-				formatter.printHelp("java -jar kdxgen.jar", options);
+				showHelp();
 				System.exit(1);
 			}
 		}
@@ -165,24 +180,24 @@ public class Generator {
 	 * <b>Usage:</b>{@code java -jar kdxgen.jar [options]}
 	 * 
 	 * <p>
-	 * {@code -d <arg>} Path to documents root. This must point to the root directory,
-	 * where all of the ebooks are stored. Furthermore, because of the KDX
-	 * hashing requirement, this path must point to a directory named
+	 * {@code -d <arg>} Path to documents root. This must point to the root
+	 * directory, where all of the ebooks are stored. Furthermore, because of
+	 * the KDX hashing requirement, this path must point to a directory named
 	 * 'documents'.
 	 * 
 	 * <p>
-	 * {@code -l <arg>} The maximum number of characters allowed as collection names. If
-	 * the generated collection name is longer than the permitted, it will be
-	 * shortened to fit within the specified length. By default, this value is
-	 * set to 48 characters.
+	 * {@code -l <arg>} The maximum number of characters allowed as collection
+	 * names. If the generated collection name is longer than the permitted, it
+	 * will be shortened to fit within the specified length. By default, this
+	 * value is set to 48 characters.
 	 * 
 	 * <p>
-	 * {@code -o <arg>} Send result to output file. If unspecified, result will be sent
-	 * to standard output (stdout).
+	 * {@code -o <arg>} Send result to output file. If unspecified, result will
+	 * be sent to standard output (stdout).
 	 * 
 	 * <p>
-	 * {@code -v} Display log information on console. By default, log information is
-	 * directed to '{@code /tmp/kdxgen.log}' file only.
+	 * {@code -v} Display log information on console. By default, log
+	 * information is directed to '{@code /tmp/kdxgen.log}' file only.
 	 * 
 	 * @param args
 	 *            the command line arguments.
