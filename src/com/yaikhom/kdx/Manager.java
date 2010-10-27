@@ -168,7 +168,9 @@ public class Manager {
 					String type = temp1[0];
 
 					// We only collection proper KDX ebooks.
-					if ("EBOK".equals(type)) {
+					// Please note that KDX automatically collects
+					// NWPR in the 'periodicals' collection.
+					if ("EBOK".equals(type) || "EBSP".equals(type)) {
 						// KDX format requires ASIN and TYPE
 						itemKey = asin + "^" + type;
 					}
