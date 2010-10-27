@@ -42,7 +42,7 @@ public class Checksum {
 	 * 
 	 * @see Manager
 	 */
-	private static final String kdxMount = "/mnt/us";
+	private static final String kdxMount = "/mnt/us/documents/";
 	private boolean uppercaseHexadecimal = false;
 	private char startChar = 'a';
 

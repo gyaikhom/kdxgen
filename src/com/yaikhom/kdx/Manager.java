@@ -136,7 +136,6 @@ public class Manager {
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		StringBuffer temp = new StringBuffer();
 		temp.append(currentDir);
-		temp.append("/");
 		temp.append(file.getName());
 		String itemKey = checksum.getKDXFilenameHash(temp.toString());
 		if (itemKey == null)
@@ -222,6 +221,33 @@ public class Manager {
 	}
 
 	/**
+	 * Generates a collection name from the supplied directory.
+	 * 
+	 * @param currentDir
+	 *            the directory path to process.
+	 * @return a collection name which corresponds to the directory.
+	 */
+	private String getCollectionName(String currentDir) {
+		if (currentDir != null) {
+			int l = currentDir.length();
+			if (l > maxlengthCollectionName) {
+				currentDir = currentDir.substring(0,
+						maxlengthCollectionName - 3);
+				currentDir += "...";
+				logger.info("Collection name too long. Shortening to '"
+						+ currentDir + "' ...");
+			} else {
+				// remove trailing '/' from collection name
+				int i = currentDir.lastIndexOf('/');
+				if (i == (l - 1)) {
+					currentDir = currentDir.substring(0, i);
+				}
+			}
+		}
+		return currentDir;
+	}
+
+	/**
 	 * This processes a file for inclusion in the KDX collection. The name of
 	 * the collection is determined by a path relative to the {@code documents/}
 	 * directory at KDX mount point.
@@ -246,13 +272,16 @@ public class Manager {
 			}
 		}
 		if (itemKey != null) {
-			Collection currentCollection = collections.get(currentDir);
-			if (currentCollection == null) {
-				currentCollection = new Collection();
-				currentCollection.setName(currentDir);
+			String collectionName = getCollectionName(currentDir);
+			if (collectionName != null) {
+				Collection currentCollection = collections.get(collectionName);
+				if (currentCollection == null) {
+					currentCollection = new Collection();
+					currentCollection.setName(collectionName);
+				}
+				currentCollection.addItem(itemKey);
+				collections.put(collectionName, currentCollection);
 			}
-			currentCollection.addItem(itemKey);
-			collections.put(currentDir, currentCollection);
 		}
 		return 0;
 	}
@@ -272,23 +301,36 @@ public class Manager {
 			throws IOException, NoSuchAlgorithmException {
 		if (file.isDirectory()) {
 			StringBuffer buf = new StringBuffer(basepath);
-			buf.append('/');
 			buf.append(file.getName());
-			String cname = buf.toString();
-			if (cname.length() > maxlengthCollectionName) {
-				cname = cname.substring(0, maxlengthCollectionName - 3);
-				cname += "...";
-				logger.info("Collection name too long. Shortening to '" + cname
-						+ "' ...");
-			}
+			buf.append('/');
 			String[] children = file.list();
 			if (children != null) {
 				for (int i = 0; i < children.length; i++) {
-					processFileTree(new File(file, children[i]), cname);
+					processFileTree(new File(file, children[i]), buf.toString());
 				}
 			}
 		} else {
 			processFile(file, basepath);
+		}
+	}
+
+	/**
+	 * Processes the root directory. We treat ebooks at the root as
+	 * uncollectible, and hence, are not considered for inclusion in
+	 * collections. This keeps the collection name shorter.
+	 * 
+	 * @param file
+	 *            the root directory to process.
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
+	private void processRoot(File file) throws NoSuchAlgorithmException,
+			IOException {
+		String[] children = file.list();
+		if (children != null) {
+			for (int i = 0; i < children.length; i++) {
+				processFileTree(new File(file, children[i]), "");
+			}
 		}
 	}
 
@@ -312,7 +354,7 @@ public class Manager {
 					+ "directory named 'documents'. On KDX the filepath "
 					+ "hash is calculated relative to this root.");
 		}
-		processFileTree(documents, "");
+		processRoot(documents);
 		return toString();
 	}
 
