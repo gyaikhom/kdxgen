@@ -301,8 +301,12 @@ public class Manager {
 	 */
 	public String process() throws NoSuchAlgorithmException, IOException {
 		File documents = new File(documentsDirectory);
-		String root = documents.getName();
-		if (!"documents".equals(root)) {
+		if (!documents.isDirectory()) {
+			logger.severe("Supplied path '" + documents.getPath()
+					+ "' is not a directory.");
+			System.exit(1);
+		}
+		if (!"documents".equals(documents.getName())) {
 			logger.warning("Supplied path may not work on KDX, since "
 					+ "KDX requires documents to be stored in a "
 					+ "directory named 'documents'. On KDX the filepath "
