@@ -15,7 +15,8 @@
         II. FEATURES     - What are its features?
        III. USAGE        - How do you use it?
         IV. EXAMPLE      - Illustration with an example scenario.
-         V. SOURCE       - How does the program work?
+         V. TODO         - Any room for further improvement?
+        VI. SOURCE       - How does the program work?
   
   
   
@@ -39,7 +40,7 @@ I hope that you will also enjoy using the tool, and find it useful.
   ______________________________________________________________________
  |                                                                      |
  |  DISCLAIMER    DISCLAIMER    DISCLAIMER    DISCLAIMER    DISCLAIMER  |   
- -----------------------------------------------------------------------|
+ |----------------------------------------------------------------------|
  | Please note that this is not a commercial product. This program is   |
  | distributed in the hope that it will be useful, but WITHOUT ANY      |
  | WARRANTY; without even the implied warranty of MERCHANTABILITY or    |
@@ -112,9 +113,9 @@ Running kdxgen, as shown below will produce a collections.json.
   ______________________________________________________________________
  |                                                                      |
  | WARNING     WARNING     WARNING     WARNING     WARNING     WARNING  |   
- -----------------------------------------------------------------------|
+ |----------------------------------------------------------------------|
  | Please save your existing collections.json before running kdxgen as  |
- | shown below; otherwise, the current collections will be lost.       |
+ | shown above; otherwise, the current collections will be lost.        |
  |______________________________________________________________________|
  
  
@@ -157,8 +158,27 @@ instead of the previous.
     seahorse.pdf
 
 
+  V. TODO
+---------------------------------------------------------------------------
+The current version retrieves ebook meta-data by parsing the filename. Because
+of this, some .azw or .azw1 files, such as
 
-  V. SOURCE
+    Treasure-Island.azw
+
+will not be added to a collection. If you use the verbose switch, '-v', while
+running the program, the files that have been skipped will be displayed. The
+same is visible in the log file '/tmp/kdxgen.log'.
+
+For an ebook to be added to a collection, it should either be a PDF file, or
+if .azw or .azw1 file, then it must have a name in the following format.
+
+    The Adventures of Sherlock Holme-asin_B000JQU1VS-type_EBOK-v_0.azw
+
+Future updates will extract the meta-data directly from the ebook.
+
+
+
+ VI. SOURCE
 ---------------------------------------------------------------------------
 Please download the source codes from sourceforge.net subversion repository.
 
