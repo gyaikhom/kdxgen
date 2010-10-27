@@ -239,7 +239,7 @@ public class Manager {
 			} else {
 				// remove trailing '/' from collection name
 				int i = currentDir.lastIndexOf('/');
-				if (i == (l - 1)) {
+				if (i != -1 && i == (l - 1)) {
 					currentDir = currentDir.substring(0, i);
 				}
 			}
@@ -329,7 +329,9 @@ public class Manager {
 		String[] children = file.list();
 		if (children != null) {
 			for (int i = 0; i < children.length; i++) {
-				processFileTree(new File(file, children[i]), "");
+				File f = new File(file, children[i]);
+				if (f.isDirectory())
+					processFileTree(f, "");
 			}
 		}
 	}
