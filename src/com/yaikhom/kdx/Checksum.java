@@ -1,4 +1,6 @@
 /*
+ * This file is part of the kdxgen project (http://kdxgen.sourceforge.net)
+ * 
  * Copyright (c) 2010 Gagarine Yaikhom
  * 
  * 
