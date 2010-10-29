@@ -89,19 +89,24 @@ To illustrate usage, consider this directory structure at KDX mount point
         |____music
         |____system
         |____documents
-                 |_______Alpha Fruits
-                           |_______apple.pdf
-                           |_______mango.azw
-                           |_______orange.azw
-                 |_______Beta Animals
-                           |_______zebra.pdf
-                           |_______rhino.pdf
-                 |_______Gamma Fish Big and Small      
-                           |_______dolphin.azw
-                           |_______whale.pdf
-                           |_______Delta Fish Small
-                                     |_______lobster.azw
-                                     |_______seahorse.pdf
+                 |____Alpha
+                 :       |____Fruits
+                 :              |____apple.pdf
+                 :              |____mango.azw
+                 :              |____orange.azw
+                 |____Beta
+                 :       |____Animals
+                 :              |____zebra.pdf
+                 :              |____rhino.pdf
+                 |____Gamma
+                         |____Interesting sea creatures
+                                |____Fish
+                                      |____Big
+                                      :     |____dolphin.azw
+                                      :     |____whale.pdf
+                                      |____Small
+                                            |____lobster.azw
+                                            |____seahorse.pdf
 
 
 Running kdxgen, as shown below will produce a collections.json.
@@ -124,38 +129,58 @@ Once loaded, restart the KDX (see Kindle* DX documentation). This could take
 a while, depending on the size of the collection. Once everything is loaded,
 the collections at the KDX 'home' should look like this:
 
-/documents/Alpha Fruits
-    apple.pdf
-    mango.azw
-    orange.azw
-/documents/Beta Animals
+Alpha/Fruits
+    apple.pdf    \
+    mango.azw     } Collection contents; not displayed at KDX home. 
+    orange.azw   /
+Beta/Animals
     zebra.pdf
     rhino.pdf
-/documents/Gamma Fish Big and Small
+Gamma/Interesting sea creatures/Fish/Big
     dolphin.azw
     whale.pdf
-/documents/Gamma Fish Big and Small/Delta Fish Small
+Gamma/Interesting sea creatures/Fish/Small      
     lobster.azw
     seahorse.pdf
 
 
 If the collection name is too long (default value is 48 characters), the
 collection name will be shortened. For example, if we assume that the
-maximum length is 30 characters, the following collection will be produced
+maximum length is 35 characters, the following collection will be produced
 instead of the previous.
 
-/documents/Alpha Fruits
+Alpha/Fruits
     apple.pdf
     mango.azw
     orange.azw
-/documents/Beta Animals
+Beta/Animals
     zebra.pdf
     rhino.pdf
-/documents/Gamma Fish Big ...
+Gamma/Interesting sea creatures...      
     dolphin.azw
     whale.pdf
     lobster.azw
     seahorse.pdf
+
+Note here that, when collections cannot be differentiated from one another,
+all of the ebooks in the child subtrees are grouped together under the same
+collection, as one would expect. In other words, the following erroneous
+collection will not be generated. 
+
+Alpha/Fruits
+    apple.pdf
+    mango.azw
+    orange.azw
+Beta/Animals
+    zebra.pdf
+    rhino.pdf
+Gamma/Interesting sea creatures...      
+    dolphin.azw
+    whale.pdf
+Gamma/Interesting sea creatures...
+    lobster.azw
+    seahorse.pdf
+
 
 
   V. TODO
@@ -184,8 +209,11 @@ Please download the source codes from sourceforge.net subversion repository.
 
 $ svn co https://kdxgen.svn.sourceforge.net/svnroot/kdxgen kdxgen
 
+This project uses Apache Commons CLI library (http://commons.apache.org/cli/)
+for parsing input arguments.
+
 
 ---------------------------------------------------------------------------
 * Kindle DX is a trademark of Amazon.com Inc.
-  This project is not is not in any way affiliated with Amazon.com Inc.
+  This project is not in any way affiliated with Amazon.com Inc.
 + Windows is a trademark of Microsoft Inc.
