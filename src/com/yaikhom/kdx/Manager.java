@@ -32,7 +32,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import com.yaikhom.kdx.Collection;
 
@@ -79,15 +80,15 @@ public class Manager {
 	 */
 	@Override
 	public String toString() {
-		Set<String> set = collections.keySet();
+		SortedSet<String> set = new TreeSet<String>(collections.keySet());
 		Iterator<String> i = set.iterator();
 		StringBuffer buf = new StringBuffer("{");
 		if (i.hasNext()) {
 			Collection c = collections.get(i.next());
-			buf.append(c.toString());
+			buf.append(c.getName());
 			while (i.hasNext()) {
 				c = collections.get(i.next());
-				buf.append("," + c.toString());
+				buf.append("," + c.getName());
 			}
 		}
 		buf.append("}");
