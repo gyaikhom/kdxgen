@@ -87,10 +87,10 @@ public class Manager {
 		StringBuffer buf = new StringBuffer("{");
 		if (i.hasNext()) {
 			Collection c = collections.get(i.next());
-			buf.append(c.getName());
+			buf.append(c.toString());
 			while (i.hasNext()) {
 				c = collections.get(i.next());
-				buf.append("," + c.getName());
+				buf.append("," + c.toString());
 			}
 		}
 		buf.append("}");
