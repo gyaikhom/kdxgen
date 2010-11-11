@@ -47,7 +47,7 @@ public class Collection {
 
 	public Collection() throws SecurityException, IOException {
 		name = new String();
-		lastAccess = (new Date()).getTime();
+		lastAccess = (new Date()).getTime() / 1000;
 		items = new ArrayList<String>();
 	}
 
