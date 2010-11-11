@@ -17,7 +17,7 @@
         IV. EXAMPLE      - Illustration with an example scenario.
          V. TODO         - Any room for further improvement?
         VI. SOURCE       - How does the program work?
-  
+       VII. REVISIONS    - How has the software evolved?
   
   
   I. INTRODUCTION
@@ -211,6 +211,15 @@ $ svn co https://kdxgen.svn.sourceforge.net/svnroot/kdxgen kdxgen
 
 This project uses Apache Commons CLI library (http://commons.apache.org/cli/)
 for parsing input arguments.
+
+
+VII. REVISIONS
+
+1.0.1
+    * Sort collections.
+    * Convert timestamp to seconds.
+
+
 
 
 ---------------------------------------------------------------------------
