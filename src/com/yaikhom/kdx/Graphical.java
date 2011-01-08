@@ -28,12 +28,15 @@
 package com.yaikhom.kdx;
 
 import java.io.*;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.logging.Logger;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 /*
  * Graphical User Interface for selecting Kindle device.
@@ -43,7 +46,7 @@ public class Graphical extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
 	private JButton openButton, saveButton, saveAsButton;
-	private JTextArea message;
+	private JEditorPane help;
 	private JTree collTree;
 	private JScrollPane scrollPane;
 	private Manager kdxm;
@@ -51,9 +54,35 @@ public class Graphical extends JPanel implements ActionListener {
 
 	public Graphical() {
 		super(new BorderLayout());
-		message = new JTextArea(5, 20);
-		message.setText("Empty collection...");
-		scrollPane = new JScrollPane(message);
+
+		// Help message and introduction.
+		help = new JEditorPane();
+		help.setEditable(false);
+		HTMLEditorKit kit = new HTMLEditorKit();
+		help.setEditorKit(kit);
+		StyleSheet style = kit.getStyleSheet();
+		style.addRule("body{color:#000;font-family:arial;margin:10px;}");
+		style.addRule("h1{color:blue;font-size:16pt;margin-bottom:0px;}");
+		style.addRule("ol{list-style-position:inside;margin-left:20px;}");
+		style.addRule("ul{list-style-position:inside;margin-left:20px;}");
+		style.addRule("p{padding-bottom:10px;}");
+		style.addRule("tt{color:#610B0B;font-family:courier;font-weight:bold;}");
+
+		URL helpURL = Graphical.class.getResource("resources/intro.html");
+		if (helpURL == null) {
+			logger.warning("Couldn't find introduction file" + helpURL);
+		} else {
+			try {
+				help.setPage(helpURL);
+			} catch (IOException e) {
+				logger.warning("Invalid introduction file URL");
+			}
+		}
+		scrollPane = new JScrollPane(help);
+		scrollPane
+				.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setPreferredSize(new Dimension(600, 400));
+		scrollPane.setMinimumSize(new Dimension(200, 100));
 
 		// Open Kindle root directory.
 		openButton = new JButton("Open Kindle");
@@ -92,7 +121,7 @@ public class Graphical extends JPanel implements ActionListener {
 					try {
 						if (kdxm.process()) {
 							collTree = kdxm.getCollectionTree();
-							scrollPane.remove(message);
+							scrollPane.remove(help);
 							scrollPane.add(collTree);
 							scrollPane.setViewportView(collTree);
 							saveButton.setEnabled(true);
@@ -100,8 +129,8 @@ public class Graphical extends JPanel implements ActionListener {
 						} else {
 							if (collTree != null) {
 								scrollPane.remove(collTree);
-								scrollPane.add(message);
-								scrollPane.setViewportView(message);
+								scrollPane.add(help);
+								scrollPane.setViewportView(help);
 								saveButton.setEnabled(false);
 								saveAsButton.setEnabled(false);
 							}
@@ -172,4 +201,4 @@ public class Graphical extends JPanel implements ActionListener {
 		});
 	}
 }
-//Created 07 January 2011, 5:45pm
+// Created 07 January 2011, 5:45pm
