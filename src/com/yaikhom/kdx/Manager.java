@@ -27,7 +27,9 @@
 
 package com.yaikhom.kdx;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +39,11 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeSelectionModel;
+
 import com.yaikhom.kdx.Collection;
 
 /**
@@ -62,9 +69,11 @@ public class Manager {
 	 * generating collections.json
 	 */
 	private HashMap<String, Collection> collections;
-	private String documentsDirectory; // Path to the documents
+	private String kdxRootPath; // Path to the Kindle device root directory
 	private Checksum checksum; // For KDX checksum calculations
 	private int maxlengthCollectionName;
+	private boolean cli; // true of command line; false if GUI
+	SortedSet<String> sortedCollection;
 
 	/**
 	 * Default maximum number of characters allowed in collection names.
@@ -82,8 +91,7 @@ public class Manager {
 	 */
 	@Override
 	public String toString() {
-		SortedSet<String> set = new TreeSet<String>(collections.keySet());
-		Iterator<String> i = set.iterator();
+		Iterator<String> i = sortedCollection.iterator();
 		StringBuffer buf = new StringBuffer("{");
 		if (i.hasNext()) {
 			Collection c = collections.get(i.next());
@@ -95,6 +103,48 @@ public class Manager {
 		}
 		buf.append("}");
 		return buf.toString();
+	}
+
+	/**
+	 * Get collection names.
+	 * 
+	 * @return Names of collections
+	 */
+	public String getCollectionNames() {
+		Iterator<String> i = sortedCollection.iterator();
+		StringBuffer buf = new StringBuffer();
+		if (i.hasNext()) {
+			Collection c = collections.get(i.next());
+			buf.append(c.getName());
+			while (i.hasNext()) {
+				c = collections.get(i.next());
+				buf.append("\n" + c.getName());
+			}
+		}
+		return buf.toString();
+	}
+
+	/**
+	 * Get collection tree (collections and their files).
+	 * 
+	 * @return A two-level collection tree
+	 */
+	public JTree getCollectionTree() {
+		Iterator<String> i = sortedCollection.iterator();
+		DefaultMutableTreeNode kdxc = new DefaultMutableTreeNode(
+				"The Kindle Collection");
+		if (i.hasNext()) {
+			Collection c = collections.get(i.next());
+			kdxc.add(c.getCollectionNode());
+			while (i.hasNext()) {
+				c = collections.get(i.next());
+				kdxc.add(c.getCollectionNode());
+			}
+		}
+		JTree tree = new JTree(kdxc);
+		tree.getSelectionModel().setSelectionMode(
+				TreeSelectionModel.SINGLE_TREE_SELECTION);
+		return tree;
 	}
 
 	/**
@@ -131,20 +181,26 @@ public class Manager {
 	 * 
 	 * @param file
 	 *            the file to process.
-	 * @return the item key for indexing the document within the collection.
+	 * @return the item representing the document within the collection.
 	 * @throws UnsupportedEncodingException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private String processPDF(File file, String currentDir)
+	private Item processPDF(File file, String currentDir)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		StringBuffer temp = new StringBuffer();
 		temp.append(currentDir);
 		temp.append(file.getName());
-		String itemKey = checksum.getKDXFilenameHash(temp.toString());
-		if (itemKey == null)
+		String key = checksum.getKDXFilenameHash(temp.toString());
+		if (key == null)
 			return null;
-		else
-			return "*" + itemKey; // KDX format requires '*' prefixing.
+		else {
+			Item item = new Item();
+			item.setType(Item.PDF_FILE);
+			item.setName(file.getName());
+			item.setPath(file.getPath());
+			item.setKey("*" + key); // KDX format requires '*' prefixing.
+			return item;
+		}
 	}
 
 	/**
@@ -152,13 +208,13 @@ public class Manager {
 	 * 
 	 * @param file
 	 *            the file to process.
-	 * @return the item key for indexing the document within the collection.
+	 * @return the item representing the document within the collection.
 	 * @throws UnsupportedEncodingException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private String processAZW(File file) throws NoSuchAlgorithmException,
+	private Item processAZW(File file) throws NoSuchAlgorithmException,
 			UnsupportedEncodingException {
-		String itemKey = null;
+		String key = null;
 		String fname = file.getName();
 		String[] temp1 = fname.split("-asin_");
 		if (temp1.length > 1) {
@@ -174,7 +230,7 @@ public class Manager {
 					// NWPR in the 'periodicals' collection.
 					if ("EBOK".equals(type) || "EBSP".equals(type)) {
 						// KDX format requires ASIN and TYPE
-						itemKey = asin + "^" + type;
+						key = asin + "^" + type;
 					}
 				} else {
 					logger.info("No version found in '" + fname
@@ -187,10 +243,16 @@ public class Manager {
 		} else {
 			logger.info("No ASIN found in '" + fname + "'. Skipping file...");
 		}
-		if (itemKey == null)
+		if (key == null)
 			return null;
-		else
-			return "#" + itemKey; // KDX format requires '#' prefixing.
+		else {
+			Item item = new Item();
+			item.setType(Item.AZW_FILE);
+			item.setName(file.getName());
+			item.setPath(file.getPath());
+			item.setKey("#" + key); // KDX format requires '#' prefixing.
+			return item;
+		}
 	}
 
 	/**
@@ -266,15 +328,15 @@ public class Manager {
 	 */
 	private int processFile(File file, String currentDir)
 			throws NoSuchAlgorithmException, SecurityException, IOException {
-		String itemKey = null;
+		Item item = null;
 		if (isPDF(file)) {
-			itemKey = processPDF(file, currentDir);
+			item = processPDF(file, currentDir);
 		} else {
 			if (isAZW(file)) {
-				itemKey = processAZW(file);
+				item = processAZW(file);
 			}
 		}
-		if (itemKey != null) {
+		if (item != null) {
 			String collectionName = getCollectionName(currentDir);
 			if (collectionName != null) {
 				Collection currentCollection = collections.get(collectionName);
@@ -282,7 +344,7 @@ public class Manager {
 					currentCollection = new Collection();
 					currentCollection.setName(collectionName);
 				}
-				currentCollection.addItem(itemKey);
+				currentCollection.addItem(item);
 				collections.put(collectionName, currentCollection);
 			}
 		}
@@ -322,17 +384,18 @@ public class Manager {
 	 * uncollectible, and hence, are not considered for inclusion in
 	 * collections. This keeps the collection name shorter.
 	 * 
-	 * @param file
-	 *            the root directory to process.
+	 * @param docsRootPath
+	 *            the path to documents root directory
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private void processRoot(File file) throws NoSuchAlgorithmException,
-			IOException {
-		String[] children = file.list();
+	private void processRoot(String docsRootPath)
+			throws NoSuchAlgorithmException, IOException {
+		File docsRoot = new File(docsRootPath);
+		String[] children = docsRoot.list();
 		if (children != null) {
 			for (int i = 0; i < children.length; i++) {
-				File f = new File(file, children[i]);
+				File f = new File(docsRoot, children[i]);
 				if (f.isDirectory())
 					processFileTree(f, "");
 			}
@@ -340,41 +403,110 @@ public class Manager {
 	}
 
 	/**
-	 * This processes the directory supplied by the user.
+	 * Checks if the supplied directory is a Kindle device file system.
+	 * 
+	 * @param file
+	 *            the Kindle device mount point.
+	 * @return returns true if the mount point has Kindle device file system;
+	 *         otherwise false.
+	 */
+	private boolean isKindleFS(File file) {
+		byte v = 0x00;
+		String[] children = file.list();
+		if (children != null) {
+			for (int i = 0; i < children.length; i++) {
+				File f = new File(file, children[i]);
+				if (f.isDirectory()) {
+					if (((v & 0x01) == 0) && "audible".equals(children[i])) {
+						v |= 0x01;
+						continue;
+					}
+					if (((v & 0x02) == 0) && "documents".equals(children[i])) {
+						v |= 0x02;
+						continue;
+					}
+					if (((v & 0x04) == 0) && "music".equals(children[i])) {
+						v |= 0x04;
+						continue;
+					}
+					if (((v & 0x08) == 0) && "system".equals(children[i])) {
+						v |= 0x08;
+						continue;
+					}
+				}
+			}
+		}
+		return (v == 0x0F);
+	}
+
+	/**
+	 * This processes the Kindle root directory supplied by the user.
 	 * 
 	 * @return a JSON string in KDX collections format.
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public String process() throws NoSuchAlgorithmException, IOException {
-		File documents = new File(documentsDirectory);
-		if (!documents.isDirectory()) {
-			logger.severe("Supplied path '" + documents.getPath()
+	public boolean process() throws NoSuchAlgorithmException, IOException {
+		File kdxRoot = new File(kdxRootPath);
+		if (!kdxRoot.isDirectory()) {
+			logger.severe("Supplied path '" + kdxRoot.getPath()
 					+ "' is not a directory.");
-			System.exit(1);
+			if (cli)
+				System.exit(1);
+			else
+				return false;
 		}
-		if (!"documents".equals(documents.getName())) {
-			logger.warning("Supplied path may not work on KDX, since "
-					+ "KDX requires documents to be stored in a "
-					+ "directory named 'documents'. On KDX the filepath "
-					+ "hash is calculated relative to this root.");
+
+		if (isKindleFS(kdxRoot)) {
+			logger.info("Kindle device loaded...");
+		} else {
+			logger.severe("Supplied path is not a Kindle "
+					+ "device root directory...");
+			if (cli)
+				System.exit(1);
+			else
+				return false;
+
 		}
-		processRoot(documents);
-		return toString();
+		processRoot(kdxRootPath + "/documents");
+		sortedCollection = new TreeSet<String>(collections.keySet());
+		return true;
+	}
+
+	/**
+	 * Save the collection to a file.
+	 * 
+	 * @param outputFile
+	 *            the output file to write to
+	 * @throws IOException
+	 */
+	public void save(String outputFile) throws IOException {
+		if (outputFile != null && outputFile.length() > 0) {
+			FileWriter fstream = new FileWriter(outputFile);
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.write(this.toString());
+			out.flush();
+		} else {
+			System.out.print(this.toString());
+		}
 	}
 
 	/**
 	 * Initialises a KDX collection manager for the supplied directory.
 	 * 
 	 * @param path
-	 *            the path to the documents.
+	 *            the path to the documents
+	 * @param cli
+	 *            true if command line; false if GUI
 	 * @throws IOException
 	 * @throws SecurityException
 	 */
-	public Manager(String path) throws SecurityException, IOException {
+	public Manager(String path, boolean cli) throws SecurityException,
+			IOException {
 		collections = new HashMap<String, Collection>();
 		checksum = new Checksum();
-		documentsDirectory = path;
+		kdxRootPath = path;
+		this.cli = cli;
 		maxlengthCollectionName = maxKDXDisplayLen;
 	}
 
@@ -387,14 +519,17 @@ public class Manager {
 	 *            the path to the documents.
 	 * @param maxlen
 	 *            the maximum length of a collection name.
+	 * @param cli
+	 *            true if command line; false if GUI
 	 * @throws IOException
 	 * @throws SecurityException
 	 */
-	public Manager(String path, int maxlen) throws SecurityException,
-			IOException {
+	public Manager(String path, int maxlen, boolean cli)
+			throws SecurityException, IOException {
 		collections = new HashMap<String, Collection>();
 		checksum = new Checksum();
-		documentsDirectory = path;
+		kdxRootPath = path;
+		this.cli = cli;
 		maxlengthCollectionName = maxlen;
 		if (maxlen > maxKDXDisplayLen) {
 			logger.info("Collection name too long; "

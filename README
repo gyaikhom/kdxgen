@@ -22,10 +22,11 @@
   
   I. INTRODUCTION
 ---------------------------------------------------------------------------
-The program kdxgen is a command line tool for generating Kindle book
-collections from a directory tree containing e-books. The collection
-names reflect multi-level organisation, as they are generated according
-to the directory tree. This program has only been tested using GNU/Linux.
+The program kdxgen is a command line (CLI) and graphical user interface (GUI)
+tool for generating Kindle book collections from a directory tree containing
+e-books. The collection names reflect multi-level organisation, as they are
+generated according to the directory tree. This program has only been tested
+using GNU/Linux, and Mac OSX.
 
 I started writing this program for personal use. I have seen GUI based
 applications, such as Calibre (http://calibre-ebook.com/) and Kindle*
@@ -33,7 +34,7 @@ Collection Manager (http://www.colegate.net/KindleCollectionManager/),
 however I could not use them. The later is only available for Windows+
 systems; whereas, the former is more general purpose (and less suitable
 for my needs). I organise my e-books using a directory tree, and hence,
-I prefer a command line tool.
+I prefer a command line tool. I have since added GUI facility for general use.
 
 I hope that you will also enjoy using the tool, and find it useful.
 
@@ -62,10 +63,8 @@ III. USAGE
 ---------------------------------------------------------------------------
  $ java -jar kdxgen.jar [OPTIONS]
  
- -d <arg>   Path to documents root. This must point to the root directory,
-            where all of the ebooks are stored. Furthermore, because of
-            the KDX hashing requirement, this path must point to a
-            directory named 'documents'.
+ -d <arg>   Path to Kindle device root. This must point to the root directory
+            of the Kindle device.
             
  -l <arg>   The maximum number of characters allowed as collection names.
             If the generated collection name is longer than the permitted,
@@ -113,7 +112,7 @@ Running kdxgen, as shown below will produce a collections.json.
 
  $ cd /mnt/kdx/system
  $ mv collections.json collections.json.old
- $ java -jar kdxgen.jar -d /mnt/kdx/documents -o collections.json
+ $ java -jar kdxgen.jar -d /mnt/kdx -o collections.json
 
   ______________________________________________________________________
  |                                                                      |
@@ -219,7 +218,9 @@ VII. REVISIONS
     * Sort collections.
     * Convert timestamp to seconds.
 
-
+1.1.0
+    * Graphical user interface.
+    * Save collections directly to Kindle device.
 
 
 ---------------------------------------------------------------------------

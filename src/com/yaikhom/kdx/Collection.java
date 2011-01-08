@@ -34,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 /**
  * Encapsulates a KDX collection.
  * 
@@ -43,12 +45,12 @@ public class Collection {
 	private static final Logger logger = Logger.getLogger("com.yaikhom.kdx");
 	private String name;
 	private Long lastAccess;
-	private List<String> items;
+	private List<Item> items;
 
 	public Collection() throws SecurityException, IOException {
 		name = new String();
 		lastAccess = (new Date()).getTime() / 1000;
-		items = new ArrayList<String>();
+		items = new ArrayList<Item>();
 	}
 
 	public String getName() {
@@ -63,24 +65,43 @@ public class Collection {
 		return lastAccess;
 	}
 
+	/*
+	 * TODO: No certain about the Kindle's last access timestamp
+	 */
 	public void setLastAccess(Long lastAccess) {
 		this.lastAccess = lastAccess;
 	}
 
-	public List<String> getItems() {
+	public List<Item> getItems() {
 		return items;
 	}
 
-	public void setItems(List<String> items) {
+	public DefaultMutableTreeNode getCollectionNode() {
+		DefaultMutableTreeNode t, n = new DefaultMutableTreeNode(name);
+		Iterator<Item> i = items.iterator();
+		if (i.hasNext()) {
+			Item item = i.next();
+			t = new DefaultMutableTreeNode(item.getName());
+			n.add(t);
+			while (i.hasNext()) {
+				item = i.next();
+				t = new DefaultMutableTreeNode(item.getName());
+				n.add(t);
+			}
+		}
+		return n;
+	}
+	
+	public void setItems(List<Item> items) {
 		this.items = items;
 	}
 
-	public int addItem(String item) {
+	public int addItem(Item item) {
 		items.add(item);
 		return items.size();
 	}
 
-	public int removeItem(String item) {
+	public int removeItem(Item item) {
 		items.remove(item);
 		return items.size();
 	}
@@ -111,11 +132,13 @@ public class Collection {
 		if (items.size() > 0) {
 			buf.append("\"" + name.replace("/", "\\/")
 					+ "@en-US\":{\"items\":[");
-			Iterator<String> i = items.iterator();
+			Iterator<Item> i = items.iterator();
 			if (i.hasNext()) {
-				buf.append("\"" + i.next() + "\"");
+				Item item = i.next();
+				buf.append("\"" + item.getKey() + "\"");
 				while (i.hasNext()) {
-					buf.append(",\"" + i.next() + "\"");
+					item = i.next();
+					buf.append(",\"" + item.getKey() + "\"");
 				}
 				buf.append("],\"lastAccess\":" + lastAccess + "}");
 			}

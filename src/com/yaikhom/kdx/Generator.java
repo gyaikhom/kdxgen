@@ -27,8 +27,6 @@
 
 package com.yaikhom.kdx;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.FileHandler;
@@ -64,8 +62,8 @@ public class Generator {
 				+ "Please read README for further help. For project details "
 				+ "visit http://kdxgen.sourceforge.net.\n");
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(80, "java -jar kdxgen.jar", null, options,
-				footer.toString(), true);
+		formatter.printHelp(80, "java -jar kdxgen.jar", null, options, footer
+				.toString(), true);
 	}
 
 	/**
@@ -82,18 +80,19 @@ public class Generator {
 		logger.setLevel(Level.ALL);
 	}
 
-	private static final String REQ_DOC_ROOT = "d";
+	private static final String REQ_KDX_ROOT = "d";
+	private static final String OPT_CLI = "c";
 	private static final String OPT_OUTPUT_FILE = "o";
 	private static final String OPT_MAXLEN = "l";
 	private static final String OPT_VERBOSE = "v";
 	private static Options options = null;
 	static {
 		options = new Options();
-		options.addOption(REQ_DOC_ROOT, true, "Path to documents root. "
-				+ "This must point to the root directory, where all of the "
-				+ "ebooks are stored. Furthermore, because of the KDX "
-				+ "hashing requirement, this path must point to a directory "
-				+ "named 'documents'.");
+		options.addOption(REQ_KDX_ROOT, true, "Path to Kindle device root. "
+				+ "This must point to the root directory "
+				+ "of the Kindle device.");
+		options.addOption(OPT_CLI, false, "By default, graphical user "
+				+ "interface (GUI) is use. Use this to turn off GUI.");
 		options.addOption(OPT_OUTPUT_FILE, true, "Send result to output "
 				+ "file. If unspecified, result will be sent to "
 				+ "standard output (stdout).");
@@ -108,9 +107,10 @@ public class Generator {
 	}
 
 	private CommandLine cmd = null;
-	private static String docRoot = null;
+	private static String kdxRootPath = null;
 	private static String outputFile = null;
 	private static int maxlen = -1;
+	private static boolean cli = false;
 
 	/**
 	 * Parse command line, and set argument after validation. Print usage
@@ -128,50 +128,58 @@ public class Generator {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		if (!cmd.hasOption(REQ_DOC_ROOT)) {
-			showHelp();
-			System.exit(1);
-		} else {
-			docRoot = cmd.getOptionValue(REQ_DOC_ROOT);
-			if (docRoot.length() < 1) {
-				logger.severe("Invalid document root...Exiting");
+		if (cmd.hasOption(OPT_CLI)) {
+			cli = true;
+
+			/*
+			 * The following values are needed for running the application
+			 * without GUI. With GUI, the required values will be obtained from
+			 * a GUI form.
+			 */
+			if (!cmd.hasOption(REQ_KDX_ROOT)) {
 				showHelp();
 				System.exit(1);
+			} else {
+				kdxRootPath = cmd.getOptionValue(REQ_KDX_ROOT);
+				if (kdxRootPath.length() < 1) {
+					logger.severe("Invalid Kindle root directory...Exiting");
+					showHelp();
+					System.exit(1);
+				}
 			}
-		}
-		if (cmd.hasOption(OPT_OUTPUT_FILE)) {
-			outputFile = cmd.getOptionValue(OPT_OUTPUT_FILE);
-		}
-		if (cmd.hasOption(OPT_MAXLEN)) {
-			maxlen = Integer.parseInt(cmd.getOptionValue(OPT_MAXLEN));
-		}
-		if (cmd.hasOption(OPT_VERBOSE)) {
-			logger.setUseParentHandlers(true);
-		} else {
-			logger.setUseParentHandlers(false);
+			if (cmd.hasOption(OPT_OUTPUT_FILE)) {
+				outputFile = cmd.getOptionValue(OPT_OUTPUT_FILE);
+			}
+			if (cmd.hasOption(OPT_MAXLEN)) {
+				maxlen = Integer.parseInt(cmd.getOptionValue(OPT_MAXLEN));
+			}
+			if (cmd.hasOption(OPT_VERBOSE)) {
+				logger.setUseParentHandlers(true);
+			} else {
+				logger.setUseParentHandlers(false);
+			}
 		}
 	}
 
 	/**
-	 * Begin collection generation.
+	 * Setup the arguments for the collection generator. These value could come
+	 * from CLI arguments, or the GUI form.
 	 * 
+	 * @param args
 	 * @throws IOException
-	 * @throws SecurityException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private void process(String[] args) throws SecurityException, IOException,
-			NoSuchAlgorithmException {
+	private void setup(String[] args) throws NoSuchAlgorithmException,
+			IOException {
 		parseArgs(args);
-		Manager kdxm = (maxlen == -1) ? new Manager(docRoot) : new Manager(
-				docRoot, maxlen);
-		String result = kdxm.process();
-		if (outputFile != null && outputFile.length() > 0) {
-			FileWriter fstream = new FileWriter(outputFile);
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(result);
-			out.flush();
+		if (!cli) {
+			Graphical gui = new Graphical();
+			gui.start();
 		} else {
-			System.out.print(result);
+			Manager kdxm = (maxlen == -1) ? new Manager(kdxRootPath, true)
+					: new Manager(kdxRootPath, maxlen, true);
+			kdxm.process();
+			kdxm.save(outputFile);
 		}
 	}
 
@@ -182,10 +190,12 @@ public class Generator {
 	 * <b>Usage:</b>{@code java -jar kdxgen.jar [options]}
 	 * 
 	 * <p>
-	 * {@code -d <arg>} Path to documents root. This must point to the root
-	 * directory, where all of the ebooks are stored. Furthermore, because of
-	 * the KDX hashing requirement, this path must point to a directory named
-	 * 'documents'.
+	 * {@code -c} Use comman line interface instead of the graphical user
+	 * interface (GUI). By default, GUI is assumed.
+	 * 
+	 * <p>
+	 * {@code -d <arg>} Path to Kindle device root. This must point to the root
+	 * directory of the Kindle device.
 	 * 
 	 * <p>
 	 * {@code -l <arg>} The maximum number of characters allowed as collection
@@ -209,7 +219,7 @@ public class Generator {
 	public static void main(String[] args) throws NoSuchAlgorithmException,
 			IOException {
 		Generator kdxgen = new Generator();
-		kdxgen.process(args);
+		kdxgen.setup(args);
 	}
 }
 
