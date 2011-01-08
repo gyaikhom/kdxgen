@@ -45,7 +45,8 @@ public class Graphical extends JPanel implements ActionListener {
 	private static final Logger logger = Logger.getLogger("com.yaikhom.kdx");
 
 	private static final long serialVersionUID = 1L;
-	private JButton openButton, saveButton, saveAsButton;
+	private JFrame frame;
+	private JButton openButton, saveButton, saveAsButton, exitButton;
 	private JEditorPane help;
 	private JTree collTree;
 	private JScrollPane scrollPane;
@@ -85,107 +86,199 @@ public class Graphical extends JPanel implements ActionListener {
 		scrollPane.setMinimumSize(new Dimension(200, 100));
 
 		// Open Kindle root directory.
-		openButton = new JButton("Open Kindle");
-		openButton.addActionListener(this);
+		openButton = createButton("Open Kindle", "open", true);
 
 		// Save as Kindle collection file.
-		saveButton = new JButton("Save to Kindle");
-		saveButton.setEnabled(false);
-		saveButton.addActionListener(this);
+		saveButton = createButton("Save to Kindle", "save", false);
 
 		// Save elsewhere (prompts user).
-		saveAsButton = new JButton("Save as file");
-		saveAsButton.setEnabled(false);
-		saveAsButton.addActionListener(this);
+		saveAsButton = createButton("Save as file", "saveas", false);
+
+		// Exit application (prompts user).
+		exitButton = createButton("Exit", "exit", true);
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(openButton);
 		buttonPanel.add(saveButton);
 		buttonPanel.add(saveAsButton);
+		buttonPanel.add(exitButton);
 
 		add(buttonPanel, BorderLayout.PAGE_START);
 		add(scrollPane, BorderLayout.CENTER);
 	}
 
-	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == openButton) {
-			JFileChooser fc = new JFileChooser();
-			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			int returnVal = fc.showOpenDialog(Graphical.this);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				File file = fc.getSelectedFile();
-				kdxRootPath = file.getAbsolutePath();
-				logger.info("Opening Kindle directory " + kdxRootPath);
-				try {
-					kdxm = new Manager(kdxRootPath, false);
-					try {
-						if (kdxm.process()) {
-							collTree = kdxm.getCollectionTree();
-							scrollPane.remove(help);
-							scrollPane.add(collTree);
-							scrollPane.setViewportView(collTree);
-							saveButton.setEnabled(true);
-							saveAsButton.setEnabled(true);
-						} else {
-							if (collTree != null) {
-								scrollPane.remove(collTree);
-								scrollPane.add(help);
-								scrollPane.setViewportView(help);
-								saveButton.setEnabled(false);
-								saveAsButton.setEnabled(false);
-							}
-						}
-					} catch (NoSuchAlgorithmException ex) {
-						ex.printStackTrace();
-					}
-				} catch (SecurityException ex) {
-					ex.printStackTrace();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			} else {
-				logger.info("Open command cancelled by user.");
-			}
+	/**
+	 * Get image icon from resources.
+	 * 
+	 * @param name
+	 *            name of the action
+	 * @return icon image which corresponds to the image file
+	 */
+	private ImageIcon getIcon(String name) {
+		URL url = Graphical.class.getResource("resources/" + name + ".png");
+		if (url == null) {
+			logger.warning("Couldn't find icon" + url);
+			return null;
+		} else {
+			return new ImageIcon(url);
 		}
-		if (e.getSource() == saveButton) {
-			String collPath = kdxRootPath + "/system/collections.json";
-			File oldColl = new File(collPath);
-			if (oldColl.exists()) {
-				File bakColl = new File(collPath + "." + (new Date()).getTime());
-				if (!oldColl.renameTo(bakColl)) {
-					logger.warning("Failed to save existing collection.");
-				}
-			}
+	}
+
+	/**
+	 * Create a button using icon and text.
+	 * 
+	 * @param label
+	 *            label to display on button
+	 * @param action
+	 *            icon to display on button
+	 *            @param isEnabled
+	 *            true if the button should be enables; false otherwise
+	 * @return a button with icon and text
+	 */
+	private JButton createButton(String label, String action, boolean isEnabled) {
+		JButton b = new JButton(label);
+		ImageIcon i = getIcon(action);
+		if (i != null)
+			b.setIcon(i);
+		b.setEnabled(isEnabled);
+		b.addActionListener(this);
+		return b;
+	}
+
+	/**
+	 * Invoked when the 'Open Kindle' button is pressed.
+	 */
+	private void actionOpen() {
+		JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int returnVal = fc.showOpenDialog(Graphical.this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+			kdxRootPath = file.getAbsolutePath();
+			logger.info("Opening Kindle directory " + kdxRootPath);
 			try {
-				kdxm.save(collPath);
+				kdxm = new Manager(kdxRootPath, false);
+				try {
+					if (kdxm.process()) {
+						collTree = kdxm.getCollectionTree();
+						scrollPane.remove(help);
+						scrollPane.add(collTree);
+						scrollPane.setViewportView(collTree);
+						saveButton.setEnabled(true);
+						saveAsButton.setEnabled(true);
+					} else {
+						if (collTree != null) {
+							scrollPane.remove(collTree);
+							scrollPane.add(help);
+							scrollPane.setViewportView(help);
+							saveButton.setEnabled(false);
+							saveAsButton.setEnabled(false);
+						}
+						JOptionPane.showMessageDialog(frame,
+								"Supplied path is not a Kindle "
+										+ "device root directory.",
+								"Invalid Kindle device",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				} catch (NoSuchAlgorithmException ex) {
+					ex.printStackTrace();
+				}
+			} catch (SecurityException ex) {
+				ex.printStackTrace();
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
-			logger.info("Collection successfully saved to Kindle.");
+		} else {
+			logger.info("Open command cancelled by user.");
+		}
+	}
+
+	/**
+	 * Invoked when the 'Save to Kindle' button is pressed.
+	 */
+	private void actionSave() {
+		String collPath = kdxRootPath + "/system/collections.json";
+		File oldColl = new File(collPath);
+		if (oldColl.exists()) {
+			File bakColl = new File(collPath + "." + (new Date()).getTime());
+			if (!oldColl.renameTo(bakColl)) {
+				logger.warning("Failed to save existing collection.");
+				int response = JOptionPane
+						.showConfirmDialog(frame,
+								"Failed to save existing collection. "
+										+ "Do you wish to continue?",
+								"Saving to Kindle device",
+								JOptionPane.OK_CANCEL_OPTION);
+				if (response == JOptionPane.CANCEL_OPTION) {
+					logger.warning("Save to Kindle device cancelled.");
+					return;
+				}
+			}
+		}
+		try {
+			kdxm.save(collPath);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		JOptionPane.showMessageDialog(frame,
+				"Collection successfully saved to Kindle device.",
+				"Saving to Kindle device", JOptionPane.INFORMATION_MESSAGE);
+		logger.info("Collection successfully saved to Kindle device.");
+	}
+
+	/**
+	 * Invoked when the 'Save as file' button is pressed.
+	 */
+	private void actionSaveAs() {
+		JFileChooser fc = new JFileChooser();
+		int returnVal = fc.showSaveDialog(Graphical.this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fc.getSelectedFile();
+			try {
+				kdxm.save(file.getAbsolutePath());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			JOptionPane.showMessageDialog(frame,
+					"Collection successfully saved to file" + file.getName()
+							+ ".", "Saving to Kindle device",
+					JOptionPane.INFORMATION_MESSAGE);
+			logger.info("Collection successfully saved to file "
+					+ file.getName());
+		} else {
+			logger.info("Save command cancelled by user.");
+		}
+	}
+
+	/**
+	 * This is called when application event is triggered.
+	 * 
+	 * @param e
+	 *            event object.
+	 */
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == openButton) {
+			actionOpen();
+			return;
+		}
+		if (e.getSource() == saveButton) {
+			actionSave();
+			return;
 		}
 		if (e.getSource() == saveAsButton) {
-			JFileChooser fc = new JFileChooser();
-			int returnVal = fc.showSaveDialog(Graphical.this);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				File file = fc.getSelectedFile();
-				try {
-					kdxm.save(file.getAbsolutePath());
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-				logger.info("Collection saved successfully to file "
-						+ file.getName());
-			} else {
-				logger.info("Save command cancelled by user.");
-			}
+			actionSaveAs();
+		}
+		if (e.getSource() == exitButton) {
+			logger.info("Exiting application...");
+			System.exit(0);
 		}
 	}
 
 	/**
 	 * Creates the GUI for selecting the KDX device.
 	 */
-	private static void selectKindleDevice() {
-		JFrame frame = new JFrame("KDX Collection Generator");
+	private void selectKindleDevice() {
+		frame = new JFrame("KDX Collection Generator");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.add(new Graphical());
 		frame.pack();
