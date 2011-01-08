@@ -63,6 +63,10 @@ III. USAGE
 ---------------------------------------------------------------------------
  $ java -jar kdxgen.jar [OPTIONS]
  
+ -c         By default graphical user interface is assumed. Use this switch
+            to request command line interface. All of the following switches
+            are ignored in graphical mode.
+             
  -d <arg>   Path to Kindle device root. This must point to the root directory
             of the Kindle device.
             
