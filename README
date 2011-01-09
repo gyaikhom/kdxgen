@@ -4,7 +4,7 @@
                     
                     
                 THE KINDLE DX* COLLECTION GENERATOR
-                Copyright (C) 2010 Gagarine Yaikhom
+                Copyright (C) 2010,2011 Gagarine Yaikhom
 
                  (http://kdxgen.sourceforge.net)
  
@@ -34,7 +34,8 @@ Collection Manager (http://www.colegate.net/KindleCollectionManager/),
 however I could not use them. The later is only available for Windows+
 systems; whereas, the former is more general purpose (and less suitable
 for my needs). I organise my e-books using a directory tree, and hence,
-I prefer a command line tool. I have since added GUI facility for general use.
+I prefer a command line tool. Since January 2011, I have added GUI facility
+for general use.
 
 I hope that you will also enjoy using the tool, and find it useful.
 
@@ -219,13 +220,13 @@ Icon theme (http://www.oxygen-icons.org/).
 
 VII. REVISIONS
 
-1.0.1
-    * Sort collections.
-    * Convert timestamp to seconds.
-
 1.1.0
     * Graphical user interface.
     * Save collections directly to Kindle device.
+    
+1.0.1
+    * Sort collections.
+    * Convert timestamp to seconds.
 
 
 ---------------------------------------------------------------------------
