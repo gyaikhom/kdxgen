@@ -214,8 +214,8 @@ Please download the source codes from sourceforge.net subversion repository.
 $ svn co https://kdxgen.svn.sourceforge.net/svnroot/kdxgen kdxgen
 
 This project uses Apache Commons CLI library (http://commons.apache.org/cli/)
-for parsing input arguments. All of the icons used are part of the Oxygen 
-Icon theme (http://www.oxygen-icons.org/).
+for parsing input arguments. All of the icons used, except for the kdxgen icon,
+are part of the Oxygen Icon theme (http://www.oxygen-icons.org/).
 
 
 VII. REVISIONS

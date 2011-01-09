@@ -1,7 +1,7 @@
 /*
  * This file is part of the kdxgen project (http://kdxgen.sourceforge.net)
  * 
- * Copyright (c) 2010 Gagarine Yaikhom
+ * Copyright (c) 2010, 2011 Gagarine Yaikhom
  * 
  * 
  * All programs in this directory and subdirectories are published under the GNU
