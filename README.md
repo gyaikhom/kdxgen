@@ -5,15 +5,15 @@ On 3 December 2013, the source repository was migrated from
 [SourceForge](http://kdxgen.sourceforge.net) to GitHub.
 
 
-## Summary of Contents
+## Summary
 
-1. INTRODUCTION - What does the program do?
-2. FEATURES - What are its features?
-3. USAGE - How do you use it?
-4. EXAMPLE - Illustration with an example scenario.
-5. TODO - Any room for further improvement?
-6. SOURCE - How does the program work?
-7. REVISIONS - How has the software evolved?
+1. _Introduction_ - What does the program do?
+2. _Features_ - What are its features?
+3. _Usage_ - How do you use it?
+4. _Example_ - Illustration with an example scenario.
+5. _Todo_ - Any room for further improvement?
+6. _Source_ - How does the program work?
+7. _Revisions_ - How has the software evolved?
   
   
 ## Introduction
@@ -199,7 +199,11 @@ Future updates will extract the meta-data directly from the ebook.
 
 ## Source
 
-Please download the source codes from sourceforge.net subversion repository.
+Please download the source codes from GitHub
+
+     $ git clone https://github.com/gyaikhom/kdxgen.git
+
+or SourceForge.net subversion repository.
 
      $ svn co https://kdxgen.svn.sourceforge.net/svnroot/kdxgen kdxgen
 
@@ -210,14 +214,12 @@ are part of the [Oxygen Icon theme](http://www.oxygen-icons.org/).
 
 ## Revisions
 
-1.1.0
-    * Graphical user interface.
-    * Save collections directly to Kindle device.
-    
-1.0.1
-    * Sort collections.
-    * Convert timestamp to seconds.
-
+* Release 1.1.0
+     - Graphical user interface.
+     - Save collections directly to Kindle device.
+* Release 1.0.1
+     - Sort collections.
+     - Convert timestamp to seconds.
 
 ***
 
